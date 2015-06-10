@@ -1,0 +1,46 @@
+diff --git a/zebra/rt_netlink.c b/zebra/rt_netlink.c
+index 2350070..97da287 100644
+--- a/zebra/rt_netlink.c
++++ b/zebra/rt_netlink.c
+@@ -162,6 +162,20 @@ netlink_socket (struct nlsock *nl, unsigned long groups)
+   int namelen;
+   int save_errno;
+ 
++  /* Bind the socket to the netlink structure for anything. */
++  ret = bind (sock, (struct sockaddr *) &snl, sizeof snl);
++  save_errno = errno;
++  if (zserv_privs.change (ZPRIVS_LOWER))
++    zlog (NULL, LOG_ERR, "Can't lower privileges");
++
++  if (ret < 0)
++    {
++      zlog (NULL, LOG_ERR, "Can't bind %s socket to group 0x%x: %s",
++            nl->name, snl.nl_groups, safe_strerror (save_errno));
++      close (sock);
++      return -1;
++    }
++
+   if (zserv_privs.change (ZPRIVS_RAISE))
+     {
+       zlog (NULL, LOG_ERR, "Can't raise privileges");
+@@ -180,20 +194,6 @@ netlink_socket (struct nlsock *nl, unsigned long groups)
+   snl.nl_family = AF_NETLINK;
+   snl.nl_groups = groups;
+ 
+-  /* Bind the socket to the netlink structure for anything. */
+-  ret = bind (sock, (struct sockaddr *) &snl, sizeof snl);
+-  save_errno = errno;
+-  if (zserv_privs.change (ZPRIVS_LOWER))
+-    zlog (NULL, LOG_ERR, "Can't lower privileges");
+-
+-  if (ret < 0)
+-    {
+-      zlog (NULL, LOG_ERR, "Can't bind %s socket to group 0x%x: %s",
+-            nl->name, snl.nl_groups, safe_strerror (save_errno));
+-      close (sock);
+-      return -1;
+-    }
+-
+   /* multiple netlink sockets will have different nl_pid */
+   namelen = sizeof snl;
+   ret = getsockname (sock, (struct sockaddr *) &snl, (socklen_t *) &namelen);
