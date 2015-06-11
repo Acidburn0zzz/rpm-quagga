@@ -17,7 +17,7 @@ Source1: quagga-filter-perl-requires.sh
 Source2: quagga-tmpfs.conf
 BuildRequires: systemd
 BuildRequires: net-snmp-devel
-BuildRequires: texinfo tetex libcap-devel texi2html
+BuildRequires: texinfo libcap-devel texi2html
 BuildRequires: readline readline-devel ncurses ncurses-devel
 Requires: net-snmp ncurses
 Requires(post): systemd /sbin/install-info
