@@ -157,6 +157,7 @@ if [ ! -e %{_sysconfdir}/quagga/vtysh.conf ]; then
     chmod 640 %{_sysconfdir}/quagga/vtysh.conf
     chown quagga:%{vty_group} %{_sysconfdir}/quagga/vtysh.conf
 fi
+semanage boolean --modify --on zebra_write_config
 
 %postun
 %systemd_postun_with_restart zebra.service
