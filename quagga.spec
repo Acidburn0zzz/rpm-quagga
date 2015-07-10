@@ -7,7 +7,7 @@
 
 Name: quagga
 Version: 0.99.24.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: Routing daemon
 License: GPLv2+
 Group: System Environment/Daemons
