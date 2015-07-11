@@ -33,9 +33,9 @@ Provides: routingdaemon = %{version}-%{release}
 Obsoletes: quagga-sysvinit
 
 Patch0: 0001-systemd-change-the-WantedBy-target.patch
-Patch1: 0001-zebra-raise-the-privileges-before-calling-socket.patch
+Patch1: 0002-zebra-raise-the-privileges-before-calling-socket.patch
 %if %with_pimd
-Patch2: quagga-pimd-service-and-init.patch
+Patch2: 0003-quagga-pimd-service-and-init.patch
 %endif
 
 %define __perl_requires %{SOURCE1}
