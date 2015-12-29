@@ -10,7 +10,7 @@
 
 Name: quagga
 Version: 0.99.24.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: Routing daemon
 License: GPLv2+
 Group: System Environment/Daemons
@@ -23,9 +23,19 @@ Source3: quagga-pimd-service-and-init.patch
 %endif
 BuildRequires: systemd
 BuildRequires: net-snmp-devel
-BuildRequires: texinfo libcap-devel texi2html
-BuildRequires: readline readline-devel ncurses ncurses-devel
-Requires: net-snmp ncurses
+BuildRequires: texinfo
+BuildRequires: libcap-devel
+
+BuildRequires: texi2html
+BuildRequires: readline
+BuildRequires: readline-devel 
+BuildRequires: ncurses
+BuildRequires: ncurses-devel
+BuildRequires: gcc
+BuildRequires: make
+BuildRequires: autoconf
+Requires: net-snmp
+Requires: ncurses
 Requires(post): systemd /sbin/install-info
 Requires(preun): systemd /sbin/install-info
 Requires(postun): systemd
@@ -292,6 +302,8 @@ fi
 %{_includedir}/quagga/ospfd/*.h
 
 %changelog
+* Tue Dec 29 2015 John Siegrist <john@complects.com - 9.99.24.1-5
+- Updated the BuildRequires dependencies in the spec file.
 * Sat Jun 11 2015 Martin Winter <mwinter@opensourcerouting.org> 0.99.24.1-4
 - Added conditional PIMd (disabled by default as it's experimental) to SPEC
 - Added conditional FPM interface (enabled by default) to SPEC
@@ -300,6 +312,5 @@ fi
 - Marked Quagga Version as CloudRouter edition
 - forced enable-gcc-rdynamic to make sure to improve chances for
   tracebacks in crashes
-
 * Mon May 4 2015 Jay Turner <jturner@iix.net> - 0.99.24.1
 - Initial build
