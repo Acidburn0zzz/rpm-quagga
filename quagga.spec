@@ -9,8 +9,8 @@
 %global _hardened_build 1
 
 Name: quagga
-Version: 0.99.24.1
-Release: 5%{?dist}
+Version: 1.0.20160315
+Release: 1%{?dist}
 Summary: Routing daemon
 License: GPLv2+
 Group: System Environment/Daemons
@@ -18,24 +18,25 @@ URL: http://www.quagga.net
 Source0: http://download.savannah.gnu.org/releases/quagga/%{name}-%{version}.tar.xz
 Source1: quagga-filter-perl-requires.sh
 Source2: quagga-tmpfs.conf
-%if %with_pimd
-Source3: quagga-pimd-service-and-init.patch
-%endif
-BuildRequires: systemd
-BuildRequires: net-snmp-devel
-BuildRequires: texinfo
-BuildRequires: libcap-devel
 
-BuildRequires: texi2html
-BuildRequires: readline
-BuildRequires: readline-devel 
+BuildRequires: autoconf
+BuildRequires: gawk
+BuildRequires: gcc
+BuildRequires: libcap-devel
+BuildRequires: make
 BuildRequires: ncurses
 BuildRequires: ncurses-devel
-BuildRequires: gcc
-BuildRequires: make
-BuildRequires: autoconf
+BuildRequires: net-snmp-devel
+BuildRequires: readline
+BuildRequires: readline-devel 
+BuildRequires: systemd
+BuildRequires: texi2html
+BuildRequires: texinfo
+BuildRequires: texlive-tetex
+
 Requires: net-snmp
 Requires: ncurses
+
 Requires(post): systemd /sbin/install-info
 Requires(preun): systemd /sbin/install-info
 Requires(postun): systemd
@@ -55,8 +56,8 @@ Quagga is free software that operates TCP/IP-based routing protocols. It takes
 a multi-server and multi-threaded approach to resolving the current complexity
 of the Internet.
 
-Quagga supports BGP4, BGP4+, BGP4-, IS-IS (experimental), OSPFv2,
-OSPFv3, PIM RIPv1, RIPv2, and RIPng.
+Quagga supports Babel, BGP4, BGP4+, BGP4-, IS-IS (experimental), OSPFv2,
+OSPFv3, PIM, RIPv1, RIPv2, and RIPng.
 
 Quagga is intended to be used as a Route Server and a Route Reflector. It is
 not a toolkit; it provides full routing power under a new architecture.
@@ -141,6 +142,7 @@ install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/isisd.service %{buildro
 install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/ripd.service %{buildroot}%{_unitdir}/ripd.service
 install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/ospfd.service %{buildroot}%{_unitdir}/ospfd.service
 install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/bgpd.service %{buildroot}%{_unitdir}/bgpd.service
+install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/babeld.service %{buildroot}%{_unitdir}/babeld.service
 install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/ospf6d.service %{buildroot}%{_unitdir}/ospf6d.service
 install -p -m 644 %{_builddir}/%{name}-%{version}/redhat/ripngd.service %{buildroot}%{_unitdir}/ripngd.service
 %if %with_pimd
@@ -170,6 +172,7 @@ getent passwd quagga >/dev/null 2>&1 || useradd -u %quagga_uid -g %quagga_gid -M
 %systemd_post ripd.service
 %systemd_post ospfd.service
 %systemd_post bgpd.service
+%systemd_post babeld.service
 %systemd_post ospf6d.service
 %systemd_post ripngd.service
 %if %with_pimd
@@ -191,36 +194,20 @@ if [ ! -e %{_sysconfdir}/quagga/vtysh.conf ]; then
     chmod 640 %{_sysconfdir}/quagga/vtysh.conf
     chown quagga:%{vty_group} %{_sysconfdir}/quagga/vtysh.conf
 fi
-if [ ! -e %{_sysconfdir}/quagga/bgpd.conf ]; then
-    touch %{_sysconfdir}/quagga/bgpd.conf
-    chmod 640 %{_sysconfdir}/quagga/bgpd.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/bgpd.conf
-fi
-if [ ! -e %{_sysconfdir}/quagga/ospfd.conf ]; then
-    touch %{_sysconfdir}/quagga/ospfd.conf
-    chmod 640 %{_sysconfdir}/quagga/ospfd.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/ospfd.conf
-fi
-if [ ! -e %{_sysconfdir}/quagga/ospf6d.conf ]; then
-    touch %{_sysconfdir}/quagga/ospf6d.conf
-    chmod 640 %{_sysconfdir}/quagga/ospf6d.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/ospf6d.conf
-fi
-if [ ! -e %{_sysconfdir}/quagga/isisd.conf ]; then
-    touch %{_sysconfdir}/quagga/isisd.conf
-    chmod 640 %{_sysconfdir}/quagga/isisd.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/isisd.conf
-fi
-if [ ! -e %{_sysconfdir}/quagga/ripd.conf ]; then
-    touch %{_sysconfdir}/quagga/ripd.conf
-    chmod 640 %{_sysconfdir}/quagga/ripd.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/ripd.conf
-fi
-if [ ! -e %{_sysconfdir}/quagga/ripngd.conf ]; then
-    touch %{_sysconfdir}/quagga/ripngd.conf
-    chmod 640 %{_sysconfdir}/quagga/ripngd.conf
-    chown quagga:quagga %{_sysconfdir}/quagga/ripngd.conf
-fi
+
+conf_files=(bgpd.conf ospfd.conf ospf6d.conf \
+    isisd.conf ripd.conf ripngd.conf
+)
+
+for conf in "${conf_files[@]}"
+do
+    if [ ! -e %{_sysconfdir}/quagga/${conf} ]; then
+        touch %{_sysconfdir}/quagga/${conf}
+        chmod 640 %{_sysconfdir}/quagga/${conf}
+        chown quagga:quagga %{_sysconfdir}/quagga/${conf}
+    fi
+done
+
 %if %with_pimd
 if [ ! -e %{_sysconfdir}/quagga/pimd.conf ]; then
     touch %{_sysconfdir}/quagga/pimd.conf
@@ -228,6 +215,7 @@ if [ ! -e %{_sysconfdir}/quagga/pimd.conf ]; then
     chown quagga:quagga %{_sysconfdir}/quagga/pimd.conf
 fi
 %endif
+
 semanage boolean --modify --on zebra_write_config
 
 %postun
@@ -236,6 +224,7 @@ semanage boolean --modify --on zebra_write_config
 %systemd_postun_with_restart ripd.service
 %systemd_postun_with_restart ospfd.service
 %systemd_postun_with_restart bgpd.service
+%systemd_postun_with_restart babeld.service
 %systemd_postun_with_restart ospf6d.service
 %systemd_postun_with_restart ripngd.service
 %if %with_pimd
@@ -252,6 +241,7 @@ fi
 %systemd_preun ripd.service
 %systemd_preun ospfd.service
 %systemd_preun bgpd.service
+%systemd_preun babeld.service
 %systemd_preun ospf6d.service
 %systemd_preun ripngd.service
 %if %with_pimd
@@ -302,9 +292,11 @@ fi
 %{_includedir}/quagga/ospfd/*.h
 
 %changelog
+* Mon Oct 17 2016 John Siegrist <john@complects.com - 1.0.20160315-1
+- Update version to 1.0.20160315
 * Tue Dec 29 2015 John Siegrist <john@complects.com - 9.99.24.1-5
 - Updated the BuildRequires dependencies in the spec file.
-* Sat Jun 11 2015 Martin Winter <mwinter@opensourcerouting.org> 0.99.24.1-4
+* Thu Jun 11 2015 Martin Winter <mwinter@opensourcerouting.org> 0.99.24.1-4
 - Added conditional PIMd (disabled by default as it's experimental) to SPEC
 - Added conditional FPM interface (enabled by default) to SPEC
 - Removed Babel (Was removed just after 0.99.24.1 from Quagga Distribution

@@ -1,8 +1,6 @@
-diff --git a/zebra/rt_netlink.c b/zebra/rt_netlink.c
-index 2350070..97da287 100644
---- a/zebra/rt_netlink.c
-+++ b/zebra/rt_netlink.c
-@@ -162,6 +162,20 @@ netlink_socket (struct nlsock *nl, unsigned long groups)
+--- a/zebra/rt_netlink.c	2016-10-17 13:08:33.831542376 +1000
++++ b/zebra/rt_netlink.c	2016-10-17 13:23:38.726277154 +1000
+@@ -154,6 +154,20 @@
    int namelen;
    int save_errno;
  
@@ -23,7 +21,7 @@ index 2350070..97da287 100644
    if (zserv_privs.change (ZPRIVS_RAISE))
      {
        zlog (NULL, LOG_ERR, "Can't raise privileges");
-@@ -180,20 +194,6 @@ netlink_socket (struct nlsock *nl, unsigned long groups)
+@@ -172,20 +186,6 @@
    snl.nl_family = AF_NETLINK;
    snl.nl_groups = groups;
  
